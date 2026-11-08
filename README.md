@@ -1,6 +1,19 @@
-# B 站 AI 评论过滤扩展 · 使用说明
+# B 站 AI 评论过滤扩展
 
-识别并隐藏 B 站视频评论区里由 AI 账号自动发布的评论。隐藏只在当前浏览器内生效，可查看判定依据、恢复评论、按 UID 管理白名单与屏蔽名单。
+[![Manifest V3](https://img.shields.io/badge/Manifest-V3-4285F4)](https://developer.chrome.com/docs/extensions/develop/migrate)
+[![License: MIT](https://img.shields.io/badge/License-MIT-3DA639.svg)](LICENSE)
+[![运行时依赖](https://img.shields.io/badge/deps-0-brightgreen)]()
+[![真实标注](https://img.shields.io/badge/标注-426%20账号-blueviolet)](docs/标注方法与结论.md)
+
+识别并隐藏 B 站视频评论区里由 AI 账号自动发布的评论。隐藏只在当前浏览器内生效，可查看判定依据、恢复评论、按 UID 管理白名单与屏蔽名单，也可以直接拉黑。
+
+判定规则不是拍脑袋定的：导出真实评论区 **504 条评论 / 426 个账号**逐条人工标注，规则从这批标注推导，纯规则召回 **87.5%**。方法与数据见 [docs/标注方法与结论.md](docs/标注方法与结论.md)。
+
+![评论列表与占位条](docs/screenshot-list.png)
+
+![判定依据面板](docs/screenshot-panel.png)
+
+> 截图为仿真夹具数据，不含真实用户。
 
 **信息截止：2026-11-08。**
 

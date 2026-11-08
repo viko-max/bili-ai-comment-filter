@@ -139,6 +139,17 @@ function check(name, ok, detail) {
 }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
+// SHOT=1 时把关键界面截图存到 docs/，用于 README（数据是仿真夹具，不含真实用户）
+const SHOT = process.env.SHOT === '1';
+async function shot(pg, name) {
+  if (!SHOT) return;
+  try {
+    mkdirSync(path.join(ROOT, 'docs'), { recursive: true });
+    await pg.screenshot({ path: path.join(ROOT, 'docs', name) });
+    console.log('SHOT', name);
+  } catch (e) { console.log('SHOT FAIL', name, e && e.message); }
+}
+
 async function waitUntil(fn, timeout = 9000, interval = 180) {
   const t0 = Date.now();
   while (Date.now() - t0 < timeout) {
@@ -271,6 +282,7 @@ async function run() {
     check('真人玩梗未被隐藏', find(s, 810010) && !find(s, 810010).hidden, JSON.stringify(find(s, 810010)));
     check('普通真人评论未被隐藏', find(s, 810011) && !find(s, 810011).hidden, JSON.stringify(find(s, 810011)));
     check('隐藏为可恢复占位条', s.placeholders > 0, `占位条 ${s.placeholders} 个`);
+    await shot(page, 'screenshot-list.png');
     check('隐藏后评论真实不可见（计算样式）',
       !!find(s, 810001) && find(s, 810001).visuallyHidden &&
       !!find(s, 810006) && find(s, 810006).visuallyHidden,
@@ -360,6 +372,7 @@ async function run() {
     await sleep(350);
     s = await state(page);
     check('判定依据可查看', whyClicked && s.panelVisible && /强证据|得分|可疑迹象|真人迹象/.test(s.panel), `panelVisible=${s.panelVisible}, 摘要=${s.panel.slice(0, 90).replace(/\s+/g, ' ')}`);
+    await shot(page, 'screenshot-panel.png');
 
     // 恢复 + 重扫后保持
     const restored = await clickPlaceholderButton(page, 810002, '恢复');
