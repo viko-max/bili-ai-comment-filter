@@ -1,0 +1,181 @@
+/* B 站 AI 评论过滤：页面内样式。同一份 CSS 也会注入 shadow root。 */
+/* B 站用 React 管理 className，外部添加的 class 会在重渲染时被覆盖；
+ * 因此以 data-* 属性为准（React 不会改写），class 仅作兼容与清理标记。 */
+/* 彻底不可见：display:none 比「高度压 0」可靠，后者遇到子元素溢出/绝对定位会露出来。
+ * 占位条是被隐藏元素的兄弟节点，不受影响。 */
+.baf-hidden.baf-hidden,
+.baf-hidden.baf-hidden *,
+[data-baf-hidden="1"],
+[data-baf-hidden="1"] * {
+  display: none !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  max-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  overflow: hidden !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+.baf-hidden-hard.baf-hidden-hard,
+[data-baf-hidden-hard="1"] { display: none !important; }
+.baf-marked.baf-marked {
+  outline: 1px dashed rgba(255, 176, 32, .75) !important;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.baf-placeholder {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  box-sizing: border-box;
+  margin: 6px 0 !important;
+  padding: 7px 12px !important;
+  border: 1px dashed rgba(148, 163, 184, .55) !important;
+  border-radius: 8px;
+  background: rgba(148, 163, 184, .09) !important;
+  color: #8a94a6;
+  font-size: 12px;
+  line-height: 1.5;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+}
+.baf-ph-tag {
+  color: #fb7299;
+  border: 1px solid rgba(251, 114, 153, .5);
+  border-radius: 4px;
+  padding: 0 5px;
+  font-weight: 600;
+}
+.baf-ph-text { flex: 1 1 160px; min-width: 100px; }
+
+.baf-btn,
+.baf-panel button {
+  cursor: pointer;
+  box-sizing: border-box;
+  border: 1px solid rgba(148, 163, 184, .45);
+  border-radius: 5px;
+  background: rgba(255, 255, 255, .1);
+  color: #dbe4ee;
+  padding: 2px 8px;
+  font-size: 11px;
+  line-height: 1.7;
+  font-family: inherit;
+  pointer-events: auto;
+}
+.baf-actions .baf-btn, .baf-placeholder .baf-btn {
+  cursor: pointer;
+  position: relative;
+  z-index: 2;
+}
+.baf-btn:hover,
+.baf-panel button:hover { border-color: #00aeec; color: #00aeec; }
+.baf-btn-primary { border-color: rgba(0, 174, 236, .7); color: #00aeec; }
+
+.baf-actions {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 5px;
+  margin-left: 8px !important;
+  vertical-align: middle;
+  font-size: 11px;
+  opacity: .85;
+  transition: opacity .15s;
+}
+.baf-actions:hover { opacity: 1; }
+.baf-badge {
+  color: #e3a008;
+  border: 1px solid rgba(227, 160, 8, .55);
+  border-radius: 4px;
+  padding: 0 5px;
+  font-size: 11px;
+}
+
+#baf-root {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 2147483000;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+  font-size: 12px;
+  color: #e6edf3;
+}
+.baf-fab {
+  cursor: pointer;
+  border: 1px solid rgba(0, 174, 236, .55);
+  border-radius: 20px;
+  background: rgba(20, 26, 34, .94);
+  color: #00aeec;
+  padding: 7px 14px;
+  font-size: 12px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, .3);
+}
+.baf-fab:hover { background: rgba(0, 174, 236, .13); }
+.baf-panel {
+  display: none;
+  width: 460px;
+  max-width: calc(100vw - 36px);
+  max-height: min(70vh, 660px);
+  overflow: auto;
+  margin-bottom: 8px;
+  padding: 14px;
+  border: 1px solid rgba(120, 140, 165, .35);
+  border-radius: 10px;
+  background: rgba(17, 22, 29, .97);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, .45);
+}
+.baf-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.baf-head strong { font-size: 14px; }
+.baf-sub { color: #7d8590; font-size: 11px; }
+.baf-stats { display: flex; gap: 16px; margin-bottom: 8px; color: #9aa5b1; }
+.baf-stats b { color: #00aeec; font-size: 14px; }
+.baf-api { padding: 6px 8px; border-radius: 5px; background: rgba(0, 174, 236, .09); color: #8ab4c8; margin-bottom: 8px; line-height: 1.5; }
+.baf-api-bad { background: rgba(248, 113, 113, .12); color: #f87171; }
+.baf-btns { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.baf-section-title { margin: 10px 0 6px; padding-top: 8px; border-top: 1px solid rgba(120, 140, 165, .18); color: #9aa5b1; font-size: 11px; }
+.baf-rows { max-height: 210px; overflow: auto; }
+.baf-row { display: flex; align-items: center; gap: 6px; padding: 4px 0; border-bottom: 1px solid rgba(120, 140, 165, .1); font-size: 11px; }
+.baf-row-tag { flex: 0 0 30px; color: #f0883e; }
+.baf-row.hide .baf-row-tag { color: #fb7299; }
+.baf-row-name { flex: 0 0 92px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #c9d1d9; }
+.baf-row-text { flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #7d8590; }
+.baf-row button { flex: 0 0 auto; }
+.baf-empty { color: #6e7681; padding: 8px 0; font-size: 11px; }
+.baf-detail { background: rgba(255, 255, 255, .035); border-radius: 6px; padding: 9px 10px; }
+.baf-detail-head { font-weight: 600; margin-bottom: 5px; }
+.baf-detail-text { color: #b6c0cc; line-height: 1.6; margin-bottom: 6px; }
+.baf-detail-meta { color: #7d8590; font-size: 11px; line-height: 1.6; }
+.baf-detail ul { margin: 6px 0 0; padding-left: 18px; color: #9aa5b1; line-height: 1.65; }
+.baf-detail li { margin-bottom: 2px; }
+.baf-detail-btns { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+.baf-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.baf-chip { border: 1px solid rgba(120, 140, 165, .3); border-radius: 12px; padding: 2px 8px; color: #9aa5b1; font-size: 11px; }
+.baf-chip button { border: none; background: none; color: #f87171; padding: 0 2px; }
+.baf-btn-danger { border-color: rgba(248, 113, 113, .65); color: #f87171; }
+.baf-btn-danger:hover { background: rgba(248, 113, 113, .12); color: #fca5a5; }
+
+#baf-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 76px;
+  transform: translateX(-50%) translateY(8px);
+  z-index: 2147483001;
+  max-width: min(560px, calc(100vw - 32px));
+  padding: 9px 14px;
+  border: 1px solid rgba(0, 174, 236, .55);
+  border-radius: 8px;
+  background: rgba(20, 26, 34, .97);
+  color: #e6edf3;
+  font-size: 12px;
+  line-height: 1.6;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, .4);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .18s, transform .18s;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+}
+#baf-toast[data-on="1"] { opacity: 1; transform: translateX(-50%) translateY(0); }
+#baf-toast.baf-toast-bad { border-color: rgba(248, 113, 113, .65); color: #fca5a5; }

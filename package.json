@@ -1,0 +1,21 @@
+{
+  "name": "bili-ai-comment-filter-verification",
+  "private": true,
+  "version": "1.0.0",
+  "description": "B站 AI 评论过滤扩展的本地验证工具（非扩展运行依赖，扩展本身零依赖可直接加载）",
+  "scripts": {
+    "bench": "node benchmark/bench.mjs",
+    "bench:fresh": "node benchmark/bench.mjs --fresh",
+    "eval:real": "node benchmark/eval-real.mjs",
+    "analyze:real": "node samples/real/analyze-labels.mjs",
+    "fetch:real": "node samples/fetch-real-comments.mjs",
+    "clusters:real": "node samples/analyze-real.mjs",
+    "review:real": "node samples/prepare-review.mjs",
+    "summary:real": "node samples/real/v2-summary.mjs",
+    "e2e": "node e2e/e2e.mjs",
+    "icons": "python bili-ai-comment-filter/tools/make-icons.py"
+  },
+  "devDependencies": {
+    "puppeteer-core": "^24.22.0"
+  }
+}

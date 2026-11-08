@@ -1,0 +1,71 @@
+{
+  "manifest_version": 3,
+  "name": "B站 AI 评论过滤 · 规则 + LingDT 决策复核",
+  "version": "1.0.0",
+  "description": "识别并隐藏 B 站评论区由 AI 账号自动发布的评论；本地规则筛选 + 可选 LingDT-Decision-1.0 结构化决策复核。隐藏仅在当前浏览器内生效，可查看依据、恢复并按 UID 管理名单。",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1pyGsJP7obp3ADOyxKXZAJRbRfpKH/tMShHxeVQHcwQHbDVk/i52D6jtK0JUqm+rpfpVVCH2d22enBRmEy4Gew7SEXlDg2pN7EJ7fL1w3mRXHo/LC4MZohsitFtPmK67Ue1wJCD1YSFkz9hCQxLBnAgnTSIbrmH1sT+hmdBO+wMN4n5dJmhDKsZGmzcqw7xZ/o1PQ/8gM+fMx/iXR/LrgGzB3aQjs3CTk3/d1b8HXuODZsN8SY8n56fC+TYpVDpYq8pY7grg0vzDZbNS/0qXA3Gw2Q0JJpE86zzNirOfXwSbyaN2zRGSjzldgBX0T33kF7ck+pIpfNZdNjCxAKKAxQIDAQAB",
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "*://*.bilibili.com/*",
+    "https://maas-api.antdigital.com/*",
+    "http://127.0.0.1/*"
+  ],
+  "optional_host_permissions": [
+    "*://*/*"
+  ],
+  "background": {
+    "service_worker": "src/background/service-worker.js"
+  },
+  "action": {
+    "default_title": "B站 AI 评论过滤",
+    "default_popup": "src/popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "options_ui": {
+    "page": "src/options/options.html",
+    "open_in_tab": true
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.bilibili.com/*"
+      ],
+      "js": [
+        "src/shared/constants.js",
+        "src/shared/utils.js",
+        "src/shared/rules.js",
+        "src/shared/decision.js",
+        "src/shared/store.js",
+        "src/content/bootstrap.js",
+        "src/content/content.js"
+      ],
+      "css": [
+        "src/content/content.css"
+      ],
+      "run_at": "document_start",
+      "all_frames": false
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "src/content/page-hook.js",
+        "src/content/content.css"
+      ],
+      "matches": [
+        "*://*.bilibili.com/*"
+      ]
+    }
+  ]
+}

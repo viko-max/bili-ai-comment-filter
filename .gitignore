@@ -1,0 +1,25 @@
+node_modules/
+.chrome-*/
+.chrome-profile/
+*.log
+.DS_Store
+
+# ---- 真实用户数据：含 B 站用户 UID / 昵称 / 评论原文，不随代码开源 ----
+samples/real/comments.json
+samples/real/comments.csv
+samples/real/标注批次.json
+samples/real/labels.json
+samples/real/待标注清单.md
+samples/real/clusters.md
+samples/real/规则v2判定结果.md
+samples/real/标注冲突待复核.md
+# 标注分析报告里带真实昵称与评论片段，一并排除
+samples/real/标注分析与规则推导.md
+
+# ---- 评估与抓取产物（含真实 UID / 昵称）----
+验证/*.json
+验证/real-dom-structure.md
+
+# ---- 本地个人素材 ----
+image.png
+image copy.png

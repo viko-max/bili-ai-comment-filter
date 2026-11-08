@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><title>仿真 B 站视频页 · 扩展端到端测试夹具</title>
+<style>
+  body { font: 14px/1.6 -apple-system, "Microsoft YaHei", sans-serif; background:#f4f5f7; margin:0; padding:20px; }
+  h1 { font-size:18px; }
+  #controls { margin: 12px 0 18px; }
+  #controls button { margin-right:8px; padding:5px 12px; cursor:pointer; }
+  #status { color:#666; font-size:12px; margin-bottom:8px; }
+  bili-comments { display:block; }
+</style>
+</head>
+<body>
+  <h1 id="video-title">仿真视频 A：楞次定律与评论区生态</h1>
+  <div id="controls">
+    <button id="load-more">加载更多评论</button>
+    <button id="expand-replies">展开楼中楼</button>
+    <button id="switch-video">切换视频</button>
+  </div>
+  <div id="status">等待评论异步加载…</div>
+  <bili-comments id="comments"></bili-comments>
+
+<script id="baf-fixture-data">window.__BAF_FIXTURE_DATA__ = __BAF_DATA__;</script>
+<script>
+/* 仿真 B 站评论组件：shadow DOM + 评论 API 异步加载 + 楼中楼 + SPA 切换视频。
+ * 页面 URL 与 API URL 由 e2e.mjs 用 puppeteer 请求拦截提供，扩展无感知。 */
+(function () {
+  'use strict';
+  const host = document.getElementById('comments');
+  const root = host.attachShadow({ mode: 'open' });
+  root.innerHTML = `<style>
+    .list { max-width:760px; }
+    .baf-comment { background:#fff; border:1px solid #e3e5e7; border-radius:6px; padding:10px 12px; margin:8px 0; }
+    .user-name { color:#00aeec; font-size:13px; font-weight:600; text-decoration:none; display:inline-block; margin-bottom:4px; }
+    .reply-content { color:#18191c; font-size:13px; }
+    .sub { margin-left:38px; }
+  </style><div class="list" id="list"></div>`;
+  const list = root.getElementById('list');
+  const status = document.getElementById('status');
+  const byId = new Map();
+
+  function render(raws, isSub, parent) {
+    const frag = document.createDocumentFragment();
+    for (const raw of raws) {
+      if (byId.has(String(raw.rpid))) continue;
+      byId.set(String(raw.rpid), true);
+      // 按 B 站评论 API 的真实字段渲染（mid / member.uname / content.message）
+      const uid = String(raw.mid != null ? raw.mid : raw.uid);
+      const uname = (raw.member && raw.member.uname) || raw.uname || '';
+      const text = (raw.content && raw.content.message) || raw.text || '';
+      const el = document.createElement('div');
+      el.className = 'baf-comment' + (isSub ? ' sub' : '');
+      el.dataset.rpid = String(raw.rpid);
+      el.dataset.uid = uid;
+      el.dataset.bafComment = '1';
+      const a = document.createElement('a');
+      a.className = 'user-name';
+      a.href = 'https://space.bilibili.com/' + uid;
+      a.textContent = uname;
+      const t = document.createElement('div');
+      t.className = 'reply-content';
+      t.textContent = text;
+      el.appendChild(a); el.appendChild(t);
+      // 楼中楼回复以缩进的兄弟节点渲染，模拟新版 B 站把回复列表放在独立容器里
+      if (isSub && parent) {
+        el.style.marginLeft = '38px';
+        el.dataset.parent = String(parent);
+      }
+      frag.appendChild(el);
+    }
+    list.appendChild(frag);
+    status.textContent = '已渲染 ' + byId.size + ' 条评论';
+  }
+
+  const VIDEO_A = 'BV1e2e00001', VIDEO_B = 'BV1e2e00002';
+  let OID = '7001001';
+  let current = VIDEO_A;
+
+  // 数据由 e2e.mjs 注入，保证页面渲染与评论 API 响应严格同源
+  const DATA = window.__BAF_FIXTURE_DATA__;
+
+  function api(path, payload) {
+    return fetch('https://api.bilibili.com/x/v2/reply/' + path, { method: 'GET' })
+      .then(r => r.json()).then(j => { if (j && j.data) render(j.data.replies, j.data.sub, j.data.parent); })
+      .catch(e => { status.textContent = '加载失败: ' + e.message; });
+  }
+
+  // e2e 拦截层通过 URL 上的 query 决定返回哪一批数据；这里只负责发请求
+  function load(batch) {
+    status.textContent = '正在异步加载 ' + batch + ' …';
+    return api('wbi/main?oid=' + OID + '&batch=' + batch);
+  }
+
+  document.getElementById('load-more').addEventListener('click', () => load('moreA'));
+  document.getElementById('expand-replies').addEventListener('click', () => load('subA'));
+  document.getElementById('switch-video').addEventListener('click', () => {
+    if (current === VIDEO_A) {
+      current = VIDEO_B; OID = '7001002';
+      history.pushState({}, '', '/video/BV1e2e00002');
+      document.getElementById('video-title').textContent = '仿真视频 B：另一个视频';
+      list.innerHTML = ''; byId.clear();
+      load('mainB');
+    } else {
+      current = VIDEO_A; OID = '7001001';
+      history.pushState({}, '', '/video/BV1e2e00001');
+      document.getElementById('video-title').textContent = '仿真视频 A：楞次定律与评论区生态';
+      list.innerHTML = ''; byId.clear();
+      load('mainA');
+    }
+  });
+
+  // 首次异步加载（评论 API 由扩展的 page-hook 只读捕获）；
+  // e2e 可通过 URL 上的 batch 参数选择不同的仿真评论分布
+  const initialBatch = new URL(location.href).searchParams.get('batch') || 'mainA';
+  setTimeout(() => load(initialBatch), 120);
+})();
+</script>
+</body>
+</html>

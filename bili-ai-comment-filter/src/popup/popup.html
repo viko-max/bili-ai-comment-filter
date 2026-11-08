@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>B站 AI 评论过滤</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <div class="title">B 站 AI 评论过滤</div>
+    <div class="sub">仅在当前浏览器生效 · 不改动 B 站服务器数据</div>
+  </header>
+
+  <section class="card">
+    <div class="row">
+      <span>运行状态</span>
+      <button id="toggle" class="pill">读取中…</button>
+    </div>
+    <div class="row">
+      <span>判定模式</span>
+      <select id="mode">
+        <option value="rules">纯规则</option>
+        <option value="model">规则 + LingDT 模型复核</option>
+      </select>
+    </div>
+    <div class="row">
+      <span>隐藏方式</span>
+      <select id="display">
+        <option value="placeholder">折叠成可恢复占位条</option>
+        <option value="vanish">完全隐藏（用面板恢复）</option>
+      </select>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="stats" id="stats">隐藏 — · 标记 — · 保留 —</div>
+    <div class="api" id="api">模型状态读取中…</div>
+    <div class="btns">
+      <button id="test">测试接口</button>
+      <button id="rescan">重新扫描</button>
+      <button id="restore">全部恢复</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="row"><span>白名单 UID</span><b id="wl">0</b></div>
+    <div class="row"><span>屏蔽名单 UID</span><b id="bl">0</b></div>
+    <div class="btns"><button id="options" class="wide">设置 / 名单 / 判定依据</button></div>
+  </section>
+
+  <div id="msg" class="msg"></div>
+  <script src="../shared/constants.js"></script>
+  <script src="../shared/utils.js"></script>
+  <script src="../shared/store.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

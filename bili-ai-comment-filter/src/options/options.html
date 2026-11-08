@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>B站 AI 评论过滤 · 设置与名单</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>B 站 AI 评论过滤 <span>设置 / 名单 / 判定依据</span></h1>
+  <p class="lede">本地规则先筛出可疑样本；模型复核由你主动启用，仅发送判断所需的公开信息。所有隐藏都只在当前浏览器内生效。</p>
+
+  <nav>
+    <a href="#basic">基本设置</a><a href="#api">模型接入</a><a href="#lists">UID 名单</a>
+    <a href="#evidence">判定依据</a><a href="#status">运行状态</a>
+  </nav>
+
+  <section id="basic" class="card">
+    <h2>基本设置</h2>
+    <label class="line"><input type="checkbox" id="enabled"> 启用过滤</label>
+    <div class="grid">
+      <label>判定模式
+        <select id="mode"><option value="rules">纯规则</option><option value="model">规则 + LingDT 模型复核</option></select>
+      </label>
+      <label>隐藏方式
+        <select id="display"><option value="placeholder">折叠成可恢复占位条</option><option value="vanish">完全隐藏</option></select>
+      </label>
+      <label>规则自动隐藏阈值<input type="number" id="thHide" min="0" max="1" step="0.01"></label>
+      <label>规则标记阈值<input type="number" id="thMark" min="0" max="1" step="0.01"></label>
+      <label>隐藏所需强证据类目数<input type="number" id="minStrong" min="1" max="5" step="1"></label>
+      <label>模型 hide 概率阈值<input type="number" id="mHide" min="0" max="1" step="0.01"></label>
+      <label>模型 is_auto 阈值<input type="number" id="mAuto" min="0" max="1" step="0.01"></label>
+      <label>模型置信度阈值<input type="number" id="mConf" min="0" max="1" step="0.01"></label>
+    </div>
+    <p class="hint">隐藏必须同时满足分数、≥2 类独立强证据、且没有强真人反证。文风书面化、单个梗词都不足以隐藏。</p>
+  </section>
+
+  <section id="api" class="card">
+    <h2>LingDT-Decision-1.0 结构化决策复核</h2>
+    <label class="line"><input type="checkbox" id="apiEnabled"> 启用模型复核（默认关闭，需主动开启）</label>
+    <div class="grid wide-grid">
+      <label class="full">接口地址
+        <input type="text" id="endpoint" spellcheck="false">
+      </label>
+      <label>模型 ID<input type="text" id="model" spellcheck="false"></label>
+      <label>协议
+        <select id="protocol"><option value="systemone">systemone（原生结构化决策）</option><option value="chat">chat/completions（兼容）</option></select>
+      </label>
+      <label>超时(ms)<input type="number" id="timeoutMs" min="1000" step="500"></label>
+      <label>每批账号数<input type="number" id="batchSize" min="1" max="6" step="1"></label>
+      <label>每分钟最多请求<input type="number" id="maxRequestsPerMinute" min="1" step="1"></label>
+      <label>最大并发<input type="number" id="maxConcurrent" min="1" max="6" step="1"></label>
+      <label>每会话调用上限<input type="number" id="maxRequestsPerSession" min="1" step="1"></label>
+      <label>去重缓存(ms)<input type="number" id="cacheTtlMs" min="0" step="60000"></label>
+    </div>
+    <p class="hint">实测端点 <code>https://maas-api.antdigital.com/v1/systemone</code>，鉴权 <code>Authorization: Bearer &lt;Key&gt;</code>，请求体 <code>{model, state, questions}</code>，响应 <code>answers</code>。每账号 4 个问题（source / is_auto / evidence / action），单次请求问题数与输入长度受 16K 上下文约束，超限时会自动拆批重试。</p>
+
+    <div class="btns"><button id="grantPerm">申请接口域名权限</button><span class="hint" style="margin:0">更换到内置白名单之外的 endpoint 时才需要</span></div>
+    <div class="keybox">
+      <label>API Key（只保存在本次浏览器会话的内存级存储，绝不写入源码、导出文件或日志）</label>
+      <div class="keyrow">
+        <input type="password" id="apiKey" placeholder="sk-…（留空表示不修改）" autocomplete="off" spellcheck="false">
+        <button id="saveKey">保存</button>
+        <button id="clearKey">清除</button>
+        <button id="testConn">测试连接</button>
+      </div>
+      <div class="keystatus" id="keyStatus">未读取</div>
+    </div>
+    <div class="privacy">
+      <strong>发送范围（可核对 <code>src/shared/decision.js</code>）</strong>
+      <ul>
+        <li>发送：公开昵称、最多 3 条评论文本片段（每条 ≤140 字）、等级、本地统计出的行为特征（5 分钟内最多连发数、跨视频数、规则得分、强证据类目数）、本地线索代码。</li>
+        <li>不发送：UID、头像 URL、cookie / 登录态、视频地址、浏览记录、IP、任何凭据。</li>
+        <li>去重（同一证据快照只调用一次）、限流（每分钟 / 并发 / 会话总量三重）、超时中断，接口不可用时明确提示并回退纯规则。</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="lists" class="card">
+    <h2>按 UID 管理名单</h2>
+    <p class="hint">白名单优先级最高（永不隐藏），其次屏蔽名单（始终隐藏），再其次单条人工处置。两者互斥。</p>
+    <div class="lists">
+      <div>
+        <h3>白名单 <span id="wlCount"></span></h3>
+        <div class="addrow"><input type="text" id="wlInput" placeholder="输入 UID"><button data-add="whitelist">添加</button></div>
+        <div class="chips" id="wlList"></div>
+      </div>
+      <div>
+        <h3>屏蔽名单 <span id="blCount"></span></h3>
+        <div class="addrow"><input type="text" id="blInput" placeholder="输入 UID"><button data-add="blocklist">添加</button></div>
+        <div class="chips" id="blList"></div>
+      </div>
+    </div>
+    <div class="btns"><button id="exportLists">导出名单 JSON</button><button id="importLists">导入名单 JSON</button></div>
+    <textarea id="listIO" placeholder="导入/导出内容会出现在这里" spellcheck="false"></textarea>
+  </section>
+
+  <section id="evidence" class="card">
+    <h2>判定依据记录</h2>
+    <p class="hint">显示当前页面最近一次扫描的结果。点「展开」查看每条评论的完整依据与模型返回。</p>
+    <div class="btns"><button id="refreshEvidence">刷新</button><button id="clearOverrides">清除本会话人工处置</button></div>
+    <div id="evidenceBox" class="evidence"></div>
+  </section>
+
+  <section id="status" class="card">
+    <h2>运行状态</h2>
+    <div id="statusBox" class="status"></div>
+  </section>
+
+  <div class="footer"><button id="saveAll" class="primary">保存全部设置</button><span id="saveMsg"></span></div>
+</div>
+
+<script src="../shared/constants.js"></script>
+<script src="../shared/utils.js"></script>
+<script src="../shared/rules.js"></script>
+<script src="../shared/decision.js"></script>
+<script src="../shared/store.js"></script>
+<script src="options.js"></script>
+</body>
+</html>
