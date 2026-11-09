@@ -42,6 +42,7 @@
     rootEl: null,
     commentHosts: [],
     panelOpen: false,
+    showKeep: false,          // 是否在面板里列出「保留」项，供用户人工兜底
     selectedKey: null,
     reviewInFlight: false,
     recomputeTimer: null,
@@ -788,6 +789,9 @@
     } else if (act === 'hide') {
       setOverride(key, 'hide');
       scheduleRecompute();
+    } else if (act === 'mark') {
+      setOverride(key, 'mark');
+      scheduleRecompute();
     } else if (act === 'whitelist') {
       if (d.uid) { ST.lists = Store.addUid(ST.lists, 'whitelist', d.uid); writeStore(local, { lists: ST.lists }); }
       setOverride(key, 'keep');
@@ -830,7 +834,8 @@
       if (!btn) return;
       const { bafAct, bafKey, bafUid } = btn.dataset;
       if (bafAct === 'why') { ST.selectedKey = bafKey; renderPanel(); }
-      else if (bafAct === 'restore' || bafAct === 'hide' || bafAct === 'whitelist' || bafAct === 'blocklist' || bafAct === 'block') onAction(bafAct, bafKey);
+      else if (bafAct === 'restore' || bafAct === 'hide' || bafAct === 'mark' || bafAct === 'whitelist' || bafAct === 'blocklist' || bafAct === 'block') onAction(bafAct, bafKey);
+      else if (bafAct === 'toggle-keep') { ST.showKeep = !ST.showKeep; renderPanel(); }
       else if (bafAct === 'restore-all') { for (const [k, dd] of ST.decisions) if (dd.decision === 'hide') setOverride(k, 'keep'); scheduleRecompute(); }
       else if (bafAct === 'rescan') { ST.modelDone.clear(); ST.modelResults = {}; scanAll(); scheduleRecompute(); }
       else if (bafAct === 'settings') { chrome.runtime.sendMessage({ type: 'BAF_OPEN_OPTIONS' }); }
@@ -865,21 +870,25 @@
         : '模型复核已启用，等待首次调用')
       : '纯规则模式（未启用模型复核）';
 
-    const rows = [...ST.decisions.values()]
-      .filter(d => d.decision !== 'keep' || (ST.selectedKey === d.key))
-      .sort((a, b) => (a.decision === 'hide' ? 0 : 1) - (b.decision === 'hide' ? 0 : 1))
-      .slice(0, 60)
+    const allDecisions = [...ST.decisions.values()];
+    const keepCount = allDecisions.filter(d => d.decision === 'keep').length;
+    const rows = allDecisions
+      .filter(d => ST.showKeep || d.decision !== 'keep' || ST.selectedKey === d.key)
+      .sort((a, b) => (a.decision === 'hide' ? 0 : a.decision === 'mark' ? 1 : 2) -
+        (b.decision === 'hide' ? 0 : b.decision === 'mark' ? 1 : 2))
+      .slice(0, 160)
       .map(d => {
         const tag = d.decision === 'hide' ? '隐藏' : d.decision === 'mark' ? '标记' : '保留';
+        const k = esc(d.key);
         return `<div class="baf-row ${d.decision}">
           <span class="baf-row-tag">${tag}</span>
           <span class="baf-row-name">${esc(d.uname || '未知用户')}</span>
           <span class="baf-row-text">${esc(U.truncate(d.text, 50))}</span>
-          <button data-baf-act="why" data-baf-key="${esc(d.key)}">依据</button>
+          <button data-baf-act="why" data-baf-key="${k}">依据</button>
           ${d.decision === 'hide'
-            ? `<button data-baf-act="restore" data-baf-key="${esc(d.key)}">恢复</button><button data-baf-act="whitelist" data-baf-key="${esc(d.key)}">白名单</button>`
-            : `<button data-baf-act="hide" data-baf-key="${esc(d.key)}">隐藏</button><button data-baf-act="blocklist" data-baf-key="${esc(d.key)}">屏蔽UID</button>`}
-          <button class="baf-btn-danger" data-baf-act="block" data-baf-key="${esc(d.key)}">拉黑</button>
+            ? `<button data-baf-act="mark" data-baf-key="${k}">改标记</button><button data-baf-act="restore" data-baf-key="${k}">恢复</button><button data-baf-act="whitelist" data-baf-key="${k}">白名单</button>`
+            : `<button data-baf-act="hide" data-baf-key="${k}">隐藏</button>${d.decision === 'keep' ? `<button data-baf-act="mark" data-baf-key="${k}">标记</button>` : `<button data-baf-act="restore" data-baf-key="${k}">恢复</button>`}<button data-baf-act="blocklist" data-baf-key="${k}">屏蔽UID</button>`}
+          <button class="baf-btn-danger" data-baf-act="block" data-baf-key="${k}">拉黑</button>
         </div>`;
       }).join('');
 
@@ -916,8 +925,9 @@
         <button data-baf-act="rescan">重新扫描</button>
         <button data-baf-act="restore-all">全部恢复</button>
         <button data-baf-act="settings">设置 / 名单</button>
+        <button data-baf-act="toggle-keep" class="${ST.showKeep ? 'baf-btn-primary' : ''}">${ST.showKeep ? '收起保留项' : `显示保留项 (${keepCount})`}</button>
       </div>
-      <div class="baf-section-title">判定记录（最近 ${Math.min(60, ST.decisions.size)} 条）</div>
+      <div class="baf-section-title">判定记录（${ST.showKeep ? allDecisions.length : allDecisions.length - keepCount} 条，最多列 160）· 每行都能手动改</div>
       <div class="baf-rows">${rows || '<div class="baf-empty">暂无可疑评论</div>'}</div>
       <div class="baf-section-title">判定依据</div>${detail}
       <div class="baf-section-title">UID 名单</div>

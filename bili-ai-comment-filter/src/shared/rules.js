@@ -326,7 +326,7 @@
         const ov = overrides[c.key];
         if (ov === 'keep' || ov === 'hide' || ov === 'mark') {
           decision = ov;
-          overridden = ov === 'keep' ? 'user_restored' : 'user_hidden';
+          overridden = ov === 'keep' ? 'user_restored' : ov === 'mark' ? 'user_marked' : 'user_hidden';
           reasons = [`人工处置｜用户${ov === 'keep' ? '恢复了这条评论' : '手动隐藏了这条评论'}`].concat(reasons);
         }
         results.push(Object.assign({}, r, {
