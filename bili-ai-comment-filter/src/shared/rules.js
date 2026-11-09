@@ -182,6 +182,7 @@
     const laugh = FN.countHits(allText, L.laugh);
     const claim = FN.countHits(allText, L.humanClaim);
     const community = FN.countHits(allText, L.community);
+    const cliche = FN.countHits(allText, L.aiCliche || []);
     const fishingHit = C.FISHING_REPEAT_RE.test(allText) || fishingWords.count >= 2 ||
       (fishingWords.count >= 1 && laugh.count >= 1);
     const ad = C.AD_RE.test(allText);
@@ -201,6 +202,8 @@
     if (signAI.count) sig(signals, 'sign_ai', 'bot', 0.3, `个性签名：${FN.truncate(sign, 46)}`);
     if (persona.count) sig(signals, 'persona_density', 'bot', 0.2, persona.words.slice(0, 4).join('、'));
     if (speech.count) sig(signals, 'agent_speech', 'bot', 0.2, speech.words.slice(0, 3).join('、'));
+    if (cliche.count) sig(signals, 'ai_cliche', 'bot', 0,
+      `命中 ${cliche.words.slice(0, 4).join('、')}（弱线索，不单独构成证据）`);
     if (low) sig(signals, 'low_level', 'bot', 0.2, `等级 Lv${group.level}`);
     if (high) sig(signals, 'high_level_human', 'human', 0.3, `等级 Lv${group.level}`);
     if (fishingHit) sig(signals, 'fishing_repeat', 'human', 1, '钓鱼打窝复读文本');
@@ -249,6 +252,12 @@
         nameCore ? '核心人设昵称' : nameLoose ? '弱人设昵称' : '',
         signAI.count ? '签名自述' : '', persona.count ? '人设口癖' : '', speech.count ? '对主人说话/自动浏览' : ''
       ].filter(Boolean).join('、')}）`;
+    } else if (cliche.count >= 2 && low) {
+      // 「还扎心 / 太真实了 / 一针见血」这类情绪化套话是 AI 评论的常见腔调，
+      // 但真人也会用。只有同一账号连中 ≥2 个且是低等级、又没有任何真人反证时，
+      // 才给一个可见的「标记」；绝不隐藏，避免重演整页误标。
+      decision = 'mark';
+      why = `无身份信号，但连中 ${cliche.count} 个 AI 常见套话（${cliche.words.slice(0, 3).join('、')}），仅标记供人工核对`;
     } else {
       why = '无身份信号，按真人放行';
       signals.push({ code: 'no_identity_signal', label: LABELS.no_identity_signal, direction: 'human', weight: 0, detail: why });
