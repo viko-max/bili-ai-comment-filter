@@ -439,11 +439,14 @@
     if (ST.reviewInFlight) return;
     if (ST.settings.mode !== 'model' || !ST.settings.api.enabled) return;
     const reviewSet = ST.settings.reviewDecisions || ['mark', 'hide'];
+    const includeAll = (ST.settings.reviewScope || 'suspect') === 'all';
     const accounts = [];
     const seen = new Set();
     for (const [uid, a] of Object.entries(ST.accountResults)) {
       if (seen.has(uid) || ST.modelDone.has(uid)) continue;
-      if (a.overridden || !reviewSet.includes(a.decision)) continue;
+      // 默认只复核 mark/hide；reviewScope=all 时把 keep 也送检，
+      // 让模型有机会发现本地规则漏掉的可疑账号（只能升级到「标记」，不能隐藏）。
+      if (a.overridden || (!includeAll && !reviewSet.includes(a.decision))) continue;
       seen.add(uid);
       const texts = [...ST.records.values()].filter(r => r.videoId === ST.videoId && String(r.uid) === uid).map(r => r.text);
       accounts.push(Object.assign({}, a, {

@@ -264,8 +264,18 @@
         modelStatus = 'kept_mark';
       }
     } else {
-      decision = 'keep';
-      reasons.push(`模型复核｜本地判定保留，模型不升级处置（source=${model.source}、action=${model.action}）`);
+      // reviewScope=all 时，模型可以在本地判 keep 的账号里「发现」可疑项，
+      // 但只允许升级为可见的「标记」，绝不直接隐藏——符合「证据不足保留或标记」。
+      const allowPromote = settings && settings.reviewScope === 'all';
+      const modelSaysAuto = sourceAuto && autoSignal >= tAuto;
+      if (allowPromote && modelSaysAuto && model.action !== 'keep') {
+        decision = 'mark';
+        reasons.push(`模型复核｜本地保留但模型判为自动发评（source=${model.source} (${U.round(model.sourceProb, 3)})、集成信号=${U.round(autoSignal, 3)}、action=${model.action}），升级为标记，评论保持可见`);
+        modelStatus = 'promoted_mark';
+      } else {
+        decision = 'keep';
+        reasons.push(`模型复核｜本地判定保留，模型不升级处置（source=${model.source}、action=${model.action}）`);
+      }
     }
     reasons.push(`模型依据｜source=${model.source} (${U.round(model.sourceProb, 3)})，is_auto=${U.round(model.autoProb, 3)}，evidence=${U.round(model.evidenceProb || 0, 3)}，action=${model.action} (${U.round(model.actionProb, 3)})，confidence=${U.round(model.confidence, 3)}`);
     return { decision, reasons: local.reasons.concat(reasons), modelStatus, model };

@@ -21,6 +21,7 @@
   function fillForm() {
     $('enabled').checked = !!settings.enabled;
     $('mode').value = settings.mode;
+    $('reviewScope').value = settings.reviewScope || 'suspect';
     $('display').value = settings.display;
     $('thHide').value = settings.thresholds.hide;
     $('thMark').value = settings.thresholds.mark;
@@ -43,6 +44,7 @@
     const num = (id, fallback) => { const v = Number($(id).value); return Number.isFinite(v) ? v : fallback; };
     settings.enabled = $('enabled').checked;
     settings.mode = $('mode').value;
+    settings.reviewScope = $('reviewScope').value;
     settings.display = $('display').value;
     settings.thresholds.hide = num('thHide', 0.72);
     settings.thresholds.mark = num('thMark', 0.34);

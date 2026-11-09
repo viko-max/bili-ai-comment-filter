@@ -36,6 +36,9 @@
     },
     minStrongCategoriesForHide: 2,
     reviewDecisions: ['mark', 'hide'],
+    // 复核范围：suspect=只复核 mark/hide（默认）；all=连同 keep 一起送检，
+    // 模型可把 keep 升级为「标记」（可见），但绝不升级为隐藏。
+    reviewScope: 'suspect',
     policy: {
       highLevelFrom: 4,          // Lv4+ 且无身份自述 → 真人
       maxAutoLevel: 3,           // 纯自动发评账号一般不超过 Lv3

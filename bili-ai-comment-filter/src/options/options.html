@@ -38,6 +38,13 @@
   <section id="api" class="card">
     <h2>LingDT-Decision-1.0 结构化决策复核</h2>
     <label class="line"><input type="checkbox" id="apiEnabled"> 启用模型复核（默认关闭，需主动开启）</label>
+    <label class="line">复核范围
+      <select id="reviewScope">
+        <option value="suspect">仅可疑账号（mark / hide，调用量小）</option>
+        <option value="all">全部账号（含保留项，模型参与发现）</option>
+      </select>
+      <span class="hint">「全部账号」时模型会复核每一条评论，把可疑的保留项升级为「标记」（可见），但不会直接隐藏；请求量明显增加，注意限流。</span>
+    </label>
     <div class="grid wide-grid">
       <label class="full">接口地址
         <input type="text" id="endpoint" spellcheck="false">
